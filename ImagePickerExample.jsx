@@ -21,7 +21,7 @@ export default function ImagePickerExample() {
   }, []);
 
   const launchImageLibrary = useCallback(async () => {
-    // No permissions request is necessary for launching the cameraImage library
+    // No permissions request is necessary for launching the mediaLibrary library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
@@ -39,7 +39,7 @@ export default function ImagePickerExample() {
       <Button title="Pick an image from camera roll" onPress={launchCamera} />
       {cameraImage && <Image source={{ uri: cameraImage }} style={{ width: 100, height: 100 }} />}
       <View style={{height: 10}}/>
-      <Button title="Pick an image from camera roll" onPress={launchImageLibrary} />
+      <Button title="Pick an image from media library" onPress={launchImageLibrary} />
       {libraryImage && <Image source={{ uri: libraryImage }} style={{ width: 100, height: 100 }} />}
     </View>
   );
