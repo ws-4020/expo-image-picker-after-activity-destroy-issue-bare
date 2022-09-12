@@ -1,0 +1,69 @@
+diff --git a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/ImagePickerModule.kt b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/ImagePickerModule.kt
+index 7a28702..963b4e4 100644
+--- a/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/ImagePickerModule.kt
++++ b/node_modules/expo-image-picker/android/src/main/java/expo/modules/imagepicker/ImagePickerModule.kt
+@@ -58,6 +58,9 @@ class ImagePickerModule : Module() {
+       ensureTargetActivityIsAvailable(options)
+       ensureCameraPermissionsAreGranted()
+ 
++      val cameraLauncher = appContext.registerForActivityResult(
++        CameraContract(this@ImagePickerModule),
++      ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+       val mediaFile = createOutputFile(context.cacheDir, options.mediaTypes.toFileExtension())
+       val uri = mediaFile.toContentUri(context)
+       val contractOptions = options.toCameraContractOptions(uri)
+@@ -66,6 +69,10 @@ class ImagePickerModule : Module() {
+     }
+ 
+     AsyncFunction("launchImageLibraryAsync") Coroutine { options: ImagePickerOptions ->
++
++      val imageLibraryLauncher = appContext.registerForActivityResult(
++        ImageLibraryContract(this@ImagePickerModule),
++      ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+       val contractOptions = options.toImageLibraryContractOptions()
+       launchContract({ imageLibraryLauncher.launch(contractOptions) }, options)
+     }
+@@ -79,22 +86,6 @@ class ImagePickerModule : Module() {
+     }
+ 
+     // endregion
+-
+-    OnCreate {
+-      coroutineScope.launch {
+-        withContext(Dispatchers.Main) {
+-          cameraLauncher = appContext.registerForActivityResult(
+-            CameraContract(this@ImagePickerModule),
+-          ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+-          imageLibraryLauncher = appContext.registerForActivityResult(
+-            ImageLibraryContract(this@ImagePickerModule),
+-          ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+-          cropImageLauncher = appContext.registerForActivityResult(
+-            CropImageContract(this@ImagePickerModule),
+-          ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+-        }
+-      }
+-    }
+   }
+ 
+   // TODO (@bbarthec): generalize it as almost every module re-declares this approach
+@@ -106,10 +97,6 @@ class ImagePickerModule : Module() {
+ 
+   private val mediaHandler = MediaHandler(this)
+ 
+-  private lateinit var cameraLauncher: AppContextActivityResultLauncher<CameraContractOptions, ImagePickerContractResult>
+-  private lateinit var imageLibraryLauncher: AppContextActivityResultLauncher<ImageLibraryContractOptions, ImagePickerContractResult>
+-  private lateinit var cropImageLauncher: AppContextActivityResultLauncher<CropImageContractOptions, ImagePickerContractResult>
+-
+   /**
+    * Stores result for an operation that has been interrupted by the activity destruction.
+    * The results are stored only for successful, non-cancelled-by-user scenario.
+@@ -133,6 +120,9 @@ class ImagePickerModule : Module() {
+         result.data.size == 1 &&
+         result.data[0].first == MediaType.IMAGE
+       ) {
++        val cropImageLauncher = appContext.registerForActivityResult(
++          CropImageContract(this@ImagePickerModule),
++        ) { input, result -> handleResultUponActivityDestruction(result, input.options) }
+         result = launchPicker {
+           cropImageLauncher.launch(CropImageContractOptions(result.data[0].second, options))
+         }
